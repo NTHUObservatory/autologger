@@ -1,6 +1,11 @@
 # IPython Notebook
 *.ipynb
 
+# Config, API token and credentials
+config.py
+token.json
+credentials.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
