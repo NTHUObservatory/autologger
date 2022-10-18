@@ -60,6 +60,7 @@ def get_meta(filepath):
     
     return meta
 
+# A abstract class to represent a single image
 class Image():
     def __init__(self, filepath):
         self.meta = get_meta(filepath)
@@ -79,6 +80,7 @@ class Image():
     def groupkey(self):
         return (self.target, self.filter, self.binning, self.exposure)
     
+# A group of images that has the same target + filter + binning + exposure values.
 class ImageGroup(tuple):
     def __new__(self, key, images, observer=''):
         return super(ImageGroup, self).__new__(self, tuple(key) + (len(images),) )
@@ -96,7 +98,10 @@ class ImageGroup(tuple):
     @property
     def groupkey(self):
         return (self.target, self.binning, self.exposure)
-    
+
+# A group of ImageGroups that is going to appear as a single line in the observation log
+# This represents the images that has the same target + binning + exposure values.
+# eg. In most cases, L with bin 1 and R, G, B with bin 2 would be represented by 2 separate ObsGroups.
 class ObsGroup(list):
     def __init__(self, image_groups):
         self.image_groups = image_groups
@@ -138,19 +143,22 @@ class ObsGroup(list):
                 'Capture Software': ', '.join({('sftN' if x.meta['software'][:8] == 'N.I.N.A.' else 
                                                 x.meta['software'])
                                                for x in self.images})}
-        
+
+# A full sequence of observations in a day
 class Sequence(list):
     def __init__(self, fp_list, observer=''):
         self.raw = fp_list
         self.orig = [Image(x) for x in fp_list]
         self.time_sorted = sorted(self.orig, key=lambda x: x.time)
-
+        
+        # Grouping a day's observations into different targets
         target_groups = []
         targets = []
         for k, g in groupby(self.time_sorted, key=lambda x: x.target):
             target_groups.append(list(g))
             targets.append(k)
 
+        # Grouping each target's observations into different ImageGroup
         self.image_groups = []
         for group in target_groups:
             data = sorted(group, key=lambda x: x.sortkey)
@@ -159,6 +167,7 @@ class Sequence(list):
                 self.image_groups.append(ImageGroup(k, images, observer))
         self.image_groups.sort(key=lambda x: x.time)
         
+        # Grouping multiple ImageGroups into ObsGroups
         for k, g in groupby(self.image_groups, key=lambda x: x.groupkey):
             image_groups = list(g)
             self.append(ObsGroup(image_groups))
