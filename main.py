@@ -3,6 +3,10 @@ from logutils import *
 
 import tkinter as tk
 from tkinter import ttk, filedialog as fd
+import webbrowser
+
+def callback(event):
+    webbrowser.open_new(f'https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit')
 
 root = tk.Tk()
 root.title('GUI')
@@ -55,8 +59,8 @@ def execute():
     seq = Sequence(sum((walk(root) for root in directory.values()), []), observer = observer.get())
     for obs in seq:
         newObs(obs.entry)
-    
-    tk.messagebox.showinfo("showinfo", f'Done! {len(obs)} entries added.')
+
+    tk.messagebox.showinfo("showinfo", f'Done! {len(obs)} entries added. Please check the spreadsheet.')
 
 observer = tk.StringVar()
 ttk.Label(root, text=f'Observer ：', style='TLabel').grid(
@@ -64,7 +68,10 @@ ttk.Label(root, text=f'Observer ：', style='TLabel').grid(
 ttk.Entry(root, textvariable=observer, style='TEntry').grid(
     column=1, row=1+i*2+2, pady=(20, 10), padx=(0,50))
 
-ttk.Button(root, text='填入 Observation Log', style='E.TButton',
+ttk.Button(root, text='自動填入', style='E.TButton',
            command=execute).grid(columnspan=2, row=1+i*2+3, pady=15)
+link = tk.Label(root, text=f'Observation Log', fg="blue", cursor="hand2")
+link.grid(columnspan=2, row=1+i*2+4, pady=15)
+link.bind("<Button-1>", callback)
 
 root.mainloop()
