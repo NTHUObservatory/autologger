@@ -8,6 +8,7 @@ root = tk.Tk()
 root.title('GUI')
 root.geometry('380x450')
 root.resizable(False, False)
+root.configure(background='#EBECEC')
 
 # configure the grid
 root.columnconfigure(0, weight=2)
