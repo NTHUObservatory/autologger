@@ -10,11 +10,13 @@ def callback(event):
     webbrowser.open_new(f'https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit')
 
 root = tk.Tk()
+style = ttk.Style(root)
 root.title('GUI')
 if platform == "win32":
-    root.geometry('380x520')
+    root.geometry('380x580')
 else:
-    root.geometry('380x480')
+    style.theme_use('default')
+    root.geometry('380x510')
 root.resizable(False, False)
 root.configure(background='#EBECEC')
 
@@ -22,20 +24,19 @@ root.configure(background='#EBECEC')
 root.columnconfigure(0, weight=2)
 root.columnconfigure(1, weight=3)
 
-style = ttk.Style(root)
 style.configure('.', font=('Helvetica', 16), background="#EBECEC")
 style.configure('TLabel', font=('Helvetica', 18),
                 borderwidth=1, focusthickness=3, focuscolor='none')
 style.configure('Heading.TLabel', font=('Helvetica', 20))
-style.configure('FP.TLabel', font=('Consolas', 12))
-style.configure('E.TButton', font=('Consolas', 18), padding=[50,30])
+style.configure('FP.TLabel', font=('Consolas', 11))
+style.configure('E.TButton', font=('Helvetica', 18), padding=[50,30])
 style.configure('TEntry', font=('Helvetica', 18))
 
 # heading
 heading = ttk.Label(root, text='清大天文台 Autologger', style='Heading.TLabel')
 heading.grid(column=0, row=0, columnspan=2, pady=(20, 10), sticky=tk.N)
 
-items = ['light', 'dark', 'bias']
+items = ['light', 'dark', 'flat', 'bias']
 
 directory_var = {}
 def select_dir(item):
@@ -75,7 +76,7 @@ ttk.Entry(root, textvariable=observer, style='TEntry').grid(
 ttk.Button(root, text='自動填入', style='E.TButton',
            command=execute).grid(columnspan=2, row=1+i*2+3, pady=15)
 link = tk.Label(root, text=f'Observation Log', fg="blue", cursor="hand2")
-link.grid(columnspan=2, row=1+i*2+4, pady=15)
+link.grid(columnspan=2, row=1+i*2+4, pady=5)
 link.bind("<Button-1>", callback)
 
 root.mainloop()
