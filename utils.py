@@ -39,9 +39,9 @@ def get_meta(filepath):
         meta['type'] = fits_header.get('IMAGETYP') or ''
         meta['target'] = fits_header.get('OBJECT') or meta['type']
         meta['filter'] = fits_header.get('FILTER') or ''
-        meta['gain'] = fits_header['GAIN'] if 'GAIN' in fits_header else ''
-        meta['exposure'] = fits_header['EXPOSURE'] if 'EXPOSURE' in fits_header else ''
-        meta['sensortemp'] = fits_header['CCD-TEMP'] if 'CCD-TEMP' in fits_header else ''
+        meta['gain'] = str(fits_header['GAIN'] if 'GAIN' in fits_header else '')
+        meta['exposure'] = str(fits_header['EXPOSURE'] if 'EXPOSURE' in fits_header else '')
+        meta['sensortemp'] = str(fits_header['CCD-TEMP'] if 'CCD-TEMP' in fits_header else '')
         meta['binning'] = f'{fits_header.get("XBINNING")}x{fits_header.get("YBINNING")}'
         meta['software'] = fits_header.get('SWCREATE') or ''
         meta['number'] = raw_meta[8]
