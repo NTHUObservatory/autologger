@@ -25,14 +25,14 @@ def get_meta(filepath):
     filename = os.path.basename(filepath)
     raw_meta = os.path.splitext(filename)[0].split('_')
     meta = {}
-    
+
     try:
         with open(filepath, 'rb') as f:
             fits = pyfits.open(f)[0]
             fits_header = fits.header
     except (FileNotFoundError, OSError):
         fits_header = None
-        
+
     if fits_header:
         meta['filename'] = filename
         meta['time'] = dt.strptime(fits_header['DATE-LOC'], '%Y-%m-%dT%H:%M:%S.%f')
@@ -57,7 +57,7 @@ def get_meta(filepath):
         meta['binning'] = raw_meta[7]
         meta['software'] = 'N.I.N.A.'
         meta['number'] = raw_meta[8]
-    
+
     return meta
 
 # A abstract class to represent a single image
@@ -68,23 +68,23 @@ class Image():
         self.filename = self.meta['filename']
         for k, v in self.meta.items():
             setattr(self, k, v)
-            
+
     def __repr__(self):
         return f'<Image {self.filename}>'
-    
+
     @property
     def sortkey(self):
         return (self.target, self.filter, self.binning, self.exposure, self.time)
-    
+
     @property
     def groupkey(self):
         return (self.target, self.filter, self.binning, self.exposure)
-    
+
 # A group of images that has the same target + filter + binning + exposure values.
 class ImageGroup(tuple):
     def __new__(self, key, images, observer=''):
         return super(ImageGroup, self).__new__(self, tuple(key) + (len(images),) )
-    
+
     def __init__(self, key, images, observer=''):
         self.time = images[0].time
         self.images = images
@@ -94,13 +94,13 @@ class ImageGroup(tuple):
         self.binning = key[2]
         self.exposure = key[3]
         self.count = len(images)
-    
+
     @property
     def groupkey(self):
-        return (self.target, self.binning, self.exposure)
+        return (self.target, self.binning)
 
 # A group of ImageGroups that is going to appear as a single line in the observation log
-# This represents the images that has the same target + binning + exposure values.
+# This represents the images that has the same target + binning values.
 # eg. In most cases, L with bin 1 and R, G, B with bin 2 would be represented by 2 separate ObsGroups.
 class ObsGroup(list):
     def __init__(self, image_groups):
@@ -111,22 +111,22 @@ class ObsGroup(list):
         self.target = image_groups[0].target
         self.filters = ', '.join(FILTER_MAP[x.filter] for x in image_groups)
         self.binning = image_groups[0].binning
-        self.exposure = image_groups[0].exposure
+        self.exposure = ', '.join(str(x.exposure) for x in image_groups)
         self.total = sum(x.count for x in image_groups)
         counts = {str(x.count) for x in image_groups}
-        self.count = (', '.join(counts) if len(image_groups) == 1 or len(counts) > 1 
+        self.count = (', '.join(counts) if len(image_groups) == 1 or len(counts) > 1
                       else ''.join(counts) + ' each')
-        
+
         if len(image_groups) > 1:
-            for x in (self.target, f'"{self.filters}"', self.binning, self.exposure, f'"{self.count}"'):
+            for x in (self.target, f'"{self.filters}"', self.binning, f'"{self.exposure}"', f'"{self.count}"'):
                 self.append(x)
         else:
             for x in (self.target, self.filters, self.binning, self.exposure, self.count):
                 self.append(x)
-            
+
     def __repr__(self):
         return f'({", ".join(str(x) for x in self)})'
-        
+
     @property
     def entry(self):
         return {'Date': self.time.date(),
@@ -140,7 +140,7 @@ class ObsGroup(list):
                 '# of Exp.': self.count,
                 'Camera Temp.': ', '.join({x.meta['sensortemp']
                                            for x in self.images}),
-                'Capture Software': ', '.join({('sftN' if x.meta['software'][:8] == 'N.I.N.A.' else 
+                'Capture Software': ', '.join({('sftN' if x.meta['software'][:8] == 'N.I.N.A.' else
                                                 x.meta['software'])
                                                for x in self.images})}
 
@@ -150,7 +150,7 @@ class Sequence(list):
         self.raw = fp_list
         self.orig = [Image(x) for x in fp_list]
         self.time_sorted = sorted(self.orig, key=lambda x: x.time)
-        
+
         # Grouping a day's observations into different targets
         target_groups = []
         targets = []
@@ -166,7 +166,7 @@ class Sequence(list):
                 images = list(g)
                 self.image_groups.append(ImageGroup(k, images, observer))
         self.image_groups.sort(key=lambda x: x.time)
-        
+
         # Grouping multiple ImageGroups into ObsGroups
         for k, g in groupby(self.image_groups, key=lambda x: x.groupkey):
             image_groups = list(g)
