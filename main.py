@@ -4,13 +4,17 @@ from logutils import *
 import tkinter as tk
 from tkinter import ttk, filedialog as fd
 import webbrowser
+from sys import platform
 
 def callback(event):
     webbrowser.open_new(f'https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit')
 
 root = tk.Tk()
 root.title('GUI')
-root.geometry('380x480')
+if platform == "win32":
+    root.geometry('380x520')
+else:
+    root.geometry('380x480')
 root.resizable(False, False)
 root.configure(background='#EBECEC')
 
