@@ -35,7 +35,7 @@ def select_dir(item):
 
     directory_var[item].set(fd.askdirectory(
         title='選擇目錄',
-        initialdir='.'))
+        initialdir='E:/astro_images/nina'))
 
 def gen_button(item, i):
     ttk.Label(root, text=f'本日 {item} ：', style='TLabel').grid(
