@@ -55,6 +55,8 @@ def execute():
     seq = Sequence(sum((walk(root) for root in directory.values()), []), observer = observer.get())
     for obs in seq:
         newObs(obs.entry)
+    
+    tk.messagebox.showinfo("showinfo", f'Done! {len(obs)} entries added.')
 
 observer = tk.StringVar()
 ttk.Label(root, text=f'Observer ：', style='TLabel').grid(
