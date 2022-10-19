@@ -31,7 +31,7 @@ if not creds or not creds.valid:
 
 def fromDateRow(s):
     return {'Date': dt.strptime(re.search(r'^\d+', s).group(0), "%Y%m%d").date(),
-            'Observer': re.search(r', Observer: (.+)$', s).group(1)}
+            'Observer': re.search(r', Observer: (.+)$', s).group(1) if re.search(r', Observer: (.+)$', s) else ''}
 
 def toDateRow(date, name):
     return "{}, Observer: {}".format(date_dt.strftime(date, "%Y%m%d"), name)
