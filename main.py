@@ -65,7 +65,7 @@ def execute():
     for obs in seq:
         newObs(obs.entry)
 
-    tk.messagebox.showinfo("showinfo", f'Done! {len(obs)} entries added. Please check the spreadsheet.')
+    tk.messagebox.showinfo("showinfo", f'Done! {len(seq)} entries added. Please check the spreadsheet.')
 
 observer = tk.StringVar()
 ttk.Label(root, text=f'Observer ：', style='TLabel').grid(
