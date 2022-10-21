@@ -39,9 +39,9 @@ def get_meta(filepath):
         meta['type'] = fits_header.get('IMAGETYP') or ''
         meta['target'] = fits_header.get('OBJECT') or meta['type']
         meta['filter'] = fits_header.get('FILTER') or ''
-        meta['gain'] = str(fits_header['GAIN'] if 'GAIN' in fits_header else '')
-        meta['exposure'] = str(fits_header['EXPOSURE'] if 'EXPOSURE' in fits_header else '')
-        meta['sensortemp'] = str(fits_header['CCD-TEMP'] if 'CCD-TEMP' in fits_header else '')
+        meta['gain'] = int(fits_header['GAIN'] if 'GAIN' in fits_header else '')
+        meta['exposure'] = float(fits_header['EXPOSURE'] if 'EXPOSURE' in fits_header else '')
+        meta['sensortemp'] = float(fits_header['CCD-TEMP'] if 'CCD-TEMP' in fits_header else '')
         meta['binning'] = f'{fits_header.get("XBINNING")}x{fits_header.get("YBINNING")}'
         meta['software'] = fits_header.get('SWCREATE') or ''
         meta['number'] = raw_meta[8]
@@ -51,9 +51,9 @@ def get_meta(filepath):
         meta['type'] = raw_meta[2]
         meta['target'] = raw_meta[3] or meta['type']
         meta['filter'] = raw_meta[4]
-        meta['gain'] = ''
-        meta['exposure'] = raw_meta[5].strip('s')
-        meta['sensortemp'] = raw_meta[6].strip('C')
+        meta['gain'] = None
+        meta['exposure'] = float(raw_meta[5].strip('s'))
+        meta['sensortemp'] = float(raw_meta[6].strip('C'))
         meta['binning'] = raw_meta[7]
         meta['software'] = 'N.I.N.A.'
         meta['number'] = raw_meta[8]
@@ -111,11 +111,21 @@ class ObsGroup(list):
         self.target = image_groups[0].target
         self.filters = ', '.join(FILTER_MAP[x.filter] for x in image_groups)
         self.binning = image_groups[0].binning
-        self.exposure = ', '.join(str(x.exposure) for x in image_groups)
+        exposures = [str(x.exposure) for x in image_groups]
+        self.exposure = ', '.join(exposures) if len(set(exposures)) > 1 else f'{exposures[0]}'
+        sensortemp = [x.meta['sensortemp'] for x in self.images]
+        if sensortemp:
+            mintemp, maxtemp = min(sensortemp), max(sensortemp)
+            if maxtemp - mintemp <= 0.1:
+                self.temp = str(maxtemp)
+            else:
+                self.temp = f'{mintemp} ~ {maxtemp}'
+        else:
+            self.temp = ''
         self.total = sum(x.count for x in image_groups)
-        counts = {str(x.count) for x in image_groups}
-        self.count = (', '.join(counts) if len(image_groups) == 1 or len(counts) > 1
-                      else ''.join(counts) + ' each')
+        counts = [str(x.count) for x in image_groups]
+        self.count = (', '.join(counts) if len(image_groups) == 1 or len(set(counts)) > 1
+                      else f'{counts[0]} each')
 
         if len(image_groups) > 1:
             for x in (self.target, f'"{self.filters}"', self.binning, f'"{self.exposure}"', f'"{self.count}"'):
@@ -135,11 +145,11 @@ class ObsGroup(list):
                 'Target': self.target,
                 'Filter': self.filters,
                 'Binning': re.match(r'(\d)x\d', self.binning).group(1),
-                'Gain': ', '.join({x.meta['gain'] for x in self.images}),
+                'Gain': ', '.join({str(x.meta['gain'])
+                                   if x.meta['gain'] is not None else '' for x in self.images}),
                 'Exp. Time (s)': self.exposure,
                 '# of Exp.': self.count,
-                'Camera Temp.': ', '.join({x.meta['sensortemp']
-                                           for x in self.images}),
+                'Camera Temp.': self.temp,
                 'Capture Software': ', '.join({('sftN' if x.meta['software'][:8] == 'N.I.N.A.' else
                                                 x.meta['software'])
                                                for x in self.images})}
