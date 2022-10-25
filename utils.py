@@ -139,7 +139,7 @@ class ObsGroup(list):
 
     @property
     def entry(self):
-        return {'Date': self.time.date(),
+        return {'Date': self.time,
                 'Observer': self.observer,
                 'Starting Time': self.time.strftime('%H:%M:%S'),
                 'Target': self.target,

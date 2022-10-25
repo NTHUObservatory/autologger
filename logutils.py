@@ -1,5 +1,5 @@
 import re
-from datetime import datetime as dt, date as date_dt
+from datetime import datetime as dt, date as date_dt, timedelta
 import os.path
 from config import *
 
@@ -33,7 +33,9 @@ def fromDateRow(s):
     return {'Date': dt.strptime(re.search(r'^\d+', s).group(0), "%Y%m%d").date(),
             'Observer': re.search(r', Observer: (.+)$', s).group(1) if re.search(r', Observer: (.+)$', s) else ''}
 
-def toDateRow(date, name):
+def toDateRow(date, name, true_date=False):
+    if not true_date:
+        date = date - timedelta(hours=12)
     return "{}, Observer: {}".format(date_dt.strftime(date, "%Y%m%d"), name)
 
 def toLogRow(obs):
@@ -41,9 +43,9 @@ def toLogRow(obs):
 
 def readLog(sheetName = None, date = None, target_date_only=True):
     if date is None:
-        date = date_dt.today()
+        date = dt.today()
     if sheetName is None:
-        if type(date) != date_dt:
+        if type(date) not in [date_dt, dt]:
             date = dt.strptime(re.search(r'^\d+', str(date)).group(0), "%Y%m%d").date()
         month = int(date.strftime("%m"))
 
@@ -77,7 +79,7 @@ def readLog(sheetName = None, date = None, target_date_only=True):
 def appendObs(obs, sheetName = None):
     date = obs['Date']
     if sheetName is None:
-        if type(date) != date_dt:
+        if type(date) not in [date_dt, dt]:
             date = dt.strptime(re.search(r'^\d+', str(date)).group(0), "%Y%m%d").date()
         month = int(date.strftime("%m"))
 
@@ -97,11 +99,11 @@ def appendObs(obs, sheetName = None):
                                  valueInputOption="USER_ENTERED",
                                  body={'values': [toLogRow(obs)]}).execute()
 
-def appendDateRow(date = None, name = '', sheetName = None):
+def appendDateRow(date = None, name = '', sheetName = None, true_date=False):
     if date is None:
-        date = date_dt.today()
+        date = dt.today()
     if sheetName is None:
-        if type(date) != date_dt:
+        if type(date) not in [date_dt, dt]:
             date = dt.strptime(re.search(r'^\d+', str(date)).group(0), "%Y%m%d").date()
         month = int(date.strftime("%m"))
 
@@ -135,7 +137,7 @@ def appendDateRow(date = None, name = '', sheetName = None):
                                                 {"updateCells": {
                                                  "rows": [
                                                       {"values": [{"userEnteredValue":
-                                                                   {'stringValue': toDateRow(date, name)},
+                                                                   {'stringValue': toDateRow(date, name, true_date)},
                                                                    "userEnteredFormat":
                                                                    {"backgroundColor": {"red": 200/255,
                                                                                         "green": 218/255,
@@ -153,7 +155,7 @@ def appendDateRow(date = None, name = '', sheetName = None):
 
 def newObs(obs):
     observations = readLog(date=obs['Date'], target_date_only=False)
-    if len(observations) and ((observations[-1]['Date'], observations[-1]['Observer']) 
+    if len(observations) and ((observations[-1]['Date'], observations[-1]['Observer'])
                               == (obs['Date'], obs['Observer'])):
         appendObs(obs)
     else:
