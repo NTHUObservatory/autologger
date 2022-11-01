@@ -153,12 +153,14 @@ def appendDateRow(date = None, name = '', sheetName = None, true_date=False):
                                                            "endColumnIndex": 1}
                                    }}]}).execute()
 
-def newObs(obs):
+def newObs(obs, true_date=False):
     observations = readLog(date=obs['Date'], target_date_only=False)
-    if len(observations) and ((observations[-1]['Date'], observations[-1]['Observer'])
-                              == (obs['Date'], obs['Observer'])):
+    if not true_date:
+        date = obs['Date'] - timedelta(hours=12)
+    if len(observations) and ((date, observations[-1]['Observer'])
+                              == (date.date(), obs['Observer'])):
         appendObs(obs)
     else:
-        appendDateRow(date = obs['Date'], name = obs['Observer'])
+        appendDateRow(date = obs['Date'], name = obs['Observer'], true_date = true_date)
         appendObs(obs)
 
